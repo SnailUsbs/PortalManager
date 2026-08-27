@@ -22,6 +22,7 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 - Custom Texture Support
 - Custom GUI Support
 - Custom Effects Support
+- Godot Based Version (Way better GUI, while still working on linux/windows with almost no code changes)
 
 ## Important Info
 
