@@ -24,11 +24,10 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 ## Future Features:
 
 - General Game File support
-- Custom map support (just handles auto installing it, with an easy delete option)
 - Custom Texture Support
 - Custom GUI Support
 - Custom Effects Support
-- Godot Based Version (Way better GUI, while still working on linux/windows with almost no code changes)
+- Godot Based Version (better GUI, while still working on linux/windows with almost no code changes)
 
 ## Important Info
 
