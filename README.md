@@ -5,7 +5,7 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 
 # Features
 
-- **Custom Models/SkinsL** Portal Manager supports custom portal guns, portals, chell models, glados models, turret models, and companion models.
+- **Custom Models/Skins:** Portal Manager supports custom portal guns, portals, chell models, glados models, turret models, and companion models.
 
 # How It Works:
 
@@ -23,7 +23,6 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 - Custom GUI Support
 - Custom Effects Support
 
-
 ## Important Info
 
-- **Why Python?:** Python easily works across both windows and linux, while also making the project extremely easy to edit. 
+- **Why Python?:** Python easily works across both windows and linux, while also making the project extremely easy to edit. We aren't doing any injecting or heavy mod setups, just moving and managing files/folders, so python is perfect for this. 
