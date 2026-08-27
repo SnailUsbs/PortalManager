@@ -5,6 +5,8 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 
 # Features
 
+- **Start Game Button:** In program button to start the game
+
 - **Custom Models/Skins:** Portal Manager supports custom portal guns, portals, chell models, glados models, turret models, and companion models.
 
 # How It Works:
