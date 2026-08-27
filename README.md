@@ -9,6 +9,8 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 
 - **Custom Models/Skins:** Portal Manager supports custom portal guns, portals, chell models, glados models, turret models, and companion models.
 
+- **Auto Creates All Folders:** Portal Manager will auto the custom, sourcemods, and PortalManager folders for you. 
+
 # How It Works:
 
 - **Portal Manager Folder:** PortalManager will make its own folder inside of your portal game folder. Inside of this PortalManager folder there are sub folders for the various types of mods. We place our mods here, as only one type of each mod can be "active" at one time, like only having one custom portal gun mod alongside one custom portal mod. The sub folders allows the program to easily swap out these mods into your actual game with the click of button, without deleting anything.
