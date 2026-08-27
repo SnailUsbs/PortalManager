@@ -32,4 +32,4 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 
 - **Why Make This?:** Mods that are required to go into the "custom" folder replace things in the game, so you can't have more than 1 type of mod replacing the same thing. This means every time you want to switch your portal's looks, the portal gun, the turrets, etc, you will have to take out what you have in there to begin with, and then add in the new mod you want. This process makes it very easy to lose mods over time, and is just annoying to work with, so PortalManager fixes that 
 
-- **Why Python?:** Python easily works across both windows and linux, while also making the project extremely easy to edit. We aren't doing any injecting or heavy mod setups, just moving and managing files/folders, so python is perfect for this. 
+- **Why Python?:** Python easily works across both windows and linux, is a one click install, and also makes the project extremely easy to edit. We aren't doing any injecting or heavy mod setups, just moving and managing files/folders, so python is perfect for this. 
