@@ -7,7 +7,7 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 
 - **Start Game Button:** In program button to start the game
 
-- **Custom Models/Skins:** Portal Manager supports custom portal guns, portals, chell models, glados models, turret models, and companion models.
+- **Custom Models/Skins:** Portal Manager supports custom portal guns, portals, chell models, glados models, turret models, bean cans, incinerators, and cube models.
 
 - **Custom Maps:** Portal Manager allows you to easily install and delete custom maps, while also giving you an easy way to keep up with what custom maps you currently have installed. 
 
