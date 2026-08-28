@@ -27,7 +27,7 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 </details>
 
 <details>
-  <summary><b>- How It Works:</b></summary>
+  <summary><b>- Future Features:</b></summary>
 
   
   - General Game File support
