@@ -32,6 +32,8 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
   <summary><b>- Future Features:</b></summary>
 
   - Auto find Portal 1 folder path
+  - Move skins related functions into their own proper script
+  - refactor file related functions
   - General Game File support
   - Custom Texture Support
   - Custom GUI Support
