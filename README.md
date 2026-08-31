@@ -31,7 +31,7 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 <details>
   <summary><b>- Future Features:</b></summary>
 
-  
+  - Auto find Portal 1 folder path
   - General Game File support
   - Custom Texture Support
   - Custom GUI Support
