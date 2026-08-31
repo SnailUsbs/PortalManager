@@ -4,7 +4,12 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 import CustomFiles
 
-SUBFOLDERS = ['PortalGuns', 'Portals', 'CompanionCubes', 'Turrets', 'Chell', 'Glados']
+SUBFOLDERS = ['PortalGuns', 'Portals', 'CompanionCubes', 'Turrets', 'Chell', 'Glados', 'Beans', 'Incinerator']
+
+
+def get_sourcemods_path(portal_dir_path):
+    steamapps = os.path.dirname(os.path.dirname(os.path.abspath(portal_dir_path)))
+    return os.path.join(steamapps, 'sourcemods')
 
 
 def run_setup(portal_dir_path):
@@ -25,5 +30,10 @@ def run_setup(portal_dir_path):
 
     try:
         os.makedirs(custom_folder_path, exist_ok=True)
+    except Exception:
+        pass
+
+    try:
+        os.makedirs(get_sourcemods_path(portal_dir_path), exist_ok=True)
     except Exception:
         pass

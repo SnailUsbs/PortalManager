@@ -6,7 +6,7 @@ class UI:
     def __init__(self, root):
         self.root = root
         self.root.title("Portal Manager")
-        self.root.geometry("800x600")
+        self.root.geometry("800x900")
         
         self.setup_black_theme()
         
@@ -22,15 +22,23 @@ class UI:
         self.maps_tab = ttk.Frame(self.notebook)
         self.notebook.add(self.maps_tab, text='Maps')
 
-    def setup_maps_tab(self, custom_maps, delete_callback, add_map_callback):
-        top_frame = tk.Frame(self.maps_tab, bg='#1e1e1e')
-        top_frame.pack(fill='x', padx=10, pady=(10, 0))
+        self.sourcemods_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.sourcemods_tab, text='SourceMods')
 
-        ttk.Button(top_frame, text="Add Custom Map", style='Blue.TButton',
-                   command=add_map_callback).pack(side='right')
+    def setup_maps_tab(self, custom_maps, delete_callback, add_map_callback, open_folder_callback):
+        top_frame = tk.Frame(self.maps_tab, bg='#1e1e1e')
+        top_frame.pack(fill='x', padx=10, pady=(4, 0))
+
+        btn_frame = tk.Frame(top_frame, bg='#1e1e1e')
+        btn_frame.pack(side='right')
+
+        ttk.Button(btn_frame, text="Add Custom Map", style='Blue.TButton',
+                   command=add_map_callback).pack(side='left', padx=(0, 4))
+        ttk.Button(btn_frame, text="Open Folder", style='Orange.TButton',
+                   command=open_folder_callback).pack(side='left')
 
         list_frame = tk.Frame(self.maps_tab, bg='#1e1e1e')
-        list_frame.pack(side='left', fill='y', padx=10, pady=10)
+        list_frame.pack(side='left', fill='y', padx=10, pady=(4, 10))
 
         tk.Label(list_frame, text="Custom Maps", bg='#1e1e1e', fg='white',
                  font=('Arial', 10, 'bold')).pack(anchor='w', pady=(0, 5))
@@ -49,9 +57,7 @@ class UI:
         scrollbar.pack(side='left', fill='y')
 
         action_frame = tk.Frame(self.maps_tab, bg='#1e1e1e')
-        action_frame.pack(side='left', fill='y', padx=(10, 0), pady=10)
-
-        tk.Label(action_frame, text="", bg='#1e1e1e').pack(pady=(18, 0))
+        action_frame.pack(side='left', fill='y', padx=(10, 0), pady=(4, 10))
 
         style = ttk.Style()
         style.configure('Red.TButton', background='#dc3545', foreground='white',
@@ -73,6 +79,71 @@ class UI:
 
         self.refresh_maps_list(custom_maps)
         return self.maps_listbox
+
+    def setup_sourcemods_tab(self, delete_callback, open_folder_callback, add_callback, filter_callback):
+        top_frame = tk.Frame(self.sourcemods_tab, bg='#1e1e1e')
+        top_frame.pack(fill='x', padx=10, pady=(4, 0))
+
+        btn_frame = tk.Frame(top_frame, bg='#1e1e1e')
+        btn_frame.pack(side='right')
+
+        ttk.Button(btn_frame, text="Add SourceMod", style='Blue.TButton',
+                   command=add_callback).pack(side='left', padx=(0, 4))
+        ttk.Button(btn_frame, text="Open Folder", style='Orange.TButton',
+                   command=open_folder_callback).pack(side='left')
+
+        self.portal1_filter_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(
+            top_frame, text="Show Only Portal 1 Mods",
+            variable=self.portal1_filter_var,
+            bg='#1e1e1e', fg='white', selectcolor='#3e3e3e',
+            activebackground='#1e1e1e', activeforeground='white',
+            command=filter_callback
+        ).pack(side='left')
+
+        list_frame = tk.Frame(self.sourcemods_tab, bg='#1e1e1e')
+        list_frame.pack(side='left', fill='y', padx=10, pady=(4, 10))
+
+        tk.Label(list_frame, text="SourceMods", bg='#1e1e1e', fg='white',
+                 font=('Arial', 10, 'bold')).pack(anchor='w', pady=(0, 5))
+
+        scrollbar = tk.Scrollbar(list_frame, orient='vertical')
+        self.sourcemods_listbox = tk.Listbox(
+            list_frame,
+            bg='#2e2e2e', fg='white',
+            selectbackground='#3e3e3e', selectforeground='white',
+            borderwidth=0, highlightthickness=0,
+            width=30, height=20,
+            yscrollcommand=scrollbar.set
+        )
+        scrollbar.config(command=self.sourcemods_listbox.yview)
+        self.sourcemods_listbox.pack(side='left', fill='y')
+        scrollbar.pack(side='left', fill='y')
+
+        action_frame = tk.Frame(self.sourcemods_tab, bg='#1e1e1e')
+        action_frame.pack(side='left', fill='y', padx=(10, 0), pady=(4, 10))
+
+        self.sourcemod_delete_btn = ttk.Button(
+            action_frame, text="Delete", style='Red.TButton',
+            command=lambda: delete_callback(self.sourcemods_listbox.get(self.sourcemods_listbox.curselection()))
+        )
+
+        def on_select(event):
+            if self.sourcemods_listbox.curselection():
+                self.sourcemod_delete_btn.pack(anchor='n')
+            else:
+                self.sourcemod_delete_btn.pack_forget()
+
+        self.sourcemods_listbox.bind('<<ListboxSelect>>', on_select)
+
+        return self.sourcemods_listbox
+
+    def refresh_sourcemods_list(self, sourcemods):
+        self.sourcemods_listbox.delete(0, 'end')
+        for mod_name in sorted(sourcemods):
+            self.sourcemods_listbox.insert('end', mod_name)
+        if hasattr(self, 'sourcemod_delete_btn'):
+            self.sourcemod_delete_btn.pack_forget()
 
     def refresh_maps_list(self, custom_maps):
         self.maps_listbox.delete(0, 'end')
@@ -112,6 +183,10 @@ class UI:
         style.configure('Blue.TButton', background='#5bc0de', foreground='white',
                        font=('Arial', 10, 'bold'), padding=8)
         style.map('Blue.TButton', background=[('active', '#31b0d5')])
+
+        style.configure('Orange.TButton', background='#e07b00', foreground='white',
+                       font=('Arial', 10, 'bold'), padding=8)
+        style.map('Orange.TButton', background=[('active', '#c46e00')])
         
         style.configure('TEntry', fieldbackground='#2e2e2e', foreground='white',
                        borderwidth=1, insertcolor='white')
@@ -148,7 +223,7 @@ class UI:
         
         return self.portal_path_entry
     
-    def setup_portal_gun_tab(self, gun_change_callback, portal_change_callback, cube_change_callback, turret_change_callback, chell_change_callback, glados_change_callback):
+    def setup_portal_gun_tab(self, gun_change_callback, portal_change_callback, cube_change_callback, turret_change_callback, chell_change_callback, glados_change_callback, beans_change_callback, incinerator_change_callback):
         gun_frame = tk.Frame(self.portal_gun_tab, bg='#1e1e1e')
         gun_frame.pack(fill='x', padx=10, pady=10)
         
@@ -237,4 +312,32 @@ class UI:
         self.glados_status_label = tk.Label(self.portal_gun_tab, text="", bg='#1e1e1e', fg='#28a745', font=('Arial', 10))
         self.glados_status_label.pack(pady=(0, 10))
 
-        return self.gun_model_combobox, self.portal_combobox, self.cube_combobox, self.turret_combobox, self.chell_combobox, self.glados_combobox, self.gun_status_label, self.portal_status_label, self.cube_status_label, self.turret_status_label, self.chell_status_label, self.glados_status_label
+        beans_frame = tk.Frame(self.portal_gun_tab, bg='#1e1e1e')
+        beans_frame.pack(fill='x', padx=10, pady=10)
+
+        beans_label = tk.Label(beans_frame, text="Beans:", bg='#1e1e1e', fg='white')
+        beans_label.pack(side='left', padx=(0, 5))
+
+        self.beans_combobox = ttk.Combobox(beans_frame, values=[], width=25, state='readonly')
+        self.beans_combobox.pack(side='left', padx=(0, 5))
+
+        ttk.Button(beans_frame, text="Change", command=beans_change_callback).pack(side='left')
+
+        self.beans_status_label = tk.Label(self.portal_gun_tab, text="", bg='#1e1e1e', fg='#28a745', font=('Arial', 10))
+        self.beans_status_label.pack(pady=(0, 10))
+
+        incinerator_frame = tk.Frame(self.portal_gun_tab, bg='#1e1e1e')
+        incinerator_frame.pack(fill='x', padx=10, pady=10)
+
+        incinerator_label = tk.Label(incinerator_frame, text="Incinerator:", bg='#1e1e1e', fg='white')
+        incinerator_label.pack(side='left', padx=(0, 5))
+
+        self.incinerator_combobox = ttk.Combobox(incinerator_frame, values=[], width=25, state='readonly')
+        self.incinerator_combobox.pack(side='left', padx=(0, 5))
+
+        ttk.Button(incinerator_frame, text="Change", command=incinerator_change_callback).pack(side='left')
+
+        self.incinerator_status_label = tk.Label(self.portal_gun_tab, text="", bg='#1e1e1e', fg='#28a745', font=('Arial', 10))
+        self.incinerator_status_label.pack(pady=(0, 10))
+
+        return self.gun_model_combobox, self.portal_combobox, self.cube_combobox, self.turret_combobox, self.chell_combobox, self.glados_combobox, self.beans_combobox, self.incinerator_combobox, self.gun_status_label, self.portal_status_label, self.cube_status_label, self.turret_status_label, self.chell_status_label, self.glados_status_label, self.beans_status_label, self.incinerator_status_label

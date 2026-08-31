@@ -10,6 +10,75 @@ import CustomFiles
 import UI
 import Setup
 import Maps
+import SourceMods
+
+SKIN_SLOTS = [
+    {
+        'label':    'Portal Gun Model/Texture',
+        'subfolder': 'PortalGuns',
+        'mod_type': 'Portal Gun Model/Texture',
+        'combobox': 'gun_model_combobox',
+        'status':   'gun_status_label',
+        'removed_msg': 'Portal Gun mod removed',
+    },
+    {
+        'label':    'Custom Portal',
+        'subfolder': 'Portals',
+        'mod_type': 'Portal',
+        'combobox': 'portal_combobox',
+        'status':   'portal_status_label',
+        'removed_msg': 'Portal mod removed',
+    },
+    {
+        'label':    'Companion Cube',
+        'subfolder': 'CompanionCubes',
+        'mod_type': 'CompanionCube',
+        'combobox': 'cube_combobox',
+        'status':   'cube_status_label',
+        'removed_msg': 'Companion Cube mod removed',
+    },
+    {
+        'label':    'Turret',
+        'subfolder': 'Turrets',
+        'mod_type': 'Turret',
+        'combobox': 'turret_combobox',
+        'status':   'turret_status_label',
+        'removed_msg': 'Turret mod removed',
+    },
+    {
+        'label':    'Chell',
+        'subfolder': 'Chell',
+        'mod_type': 'Chell',
+        'combobox': 'chell_combobox',
+        'status':   'chell_status_label',
+        'removed_msg': 'Chell mod removed',
+    },
+    {
+        'label':    'Glados',
+        'subfolder': 'Glados',
+        'mod_type': 'Glados',
+        'combobox': 'glados_combobox',
+        'status':   'glados_status_label',
+        'removed_msg': 'Glados mod removed',
+    },
+    {
+        'label':    'Beans',
+        'subfolder': 'Beans',
+        'mod_type': 'Beans',
+        'combobox': 'beans_combobox',
+        'status':   'beans_status_label',
+        'removed_msg': 'Beans mod removed',
+    },
+    {
+        'label':    'Incinerator',
+        'subfolder': 'Incinerator',
+        'mod_type': 'Incinerator',
+        'combobox': 'incinerator_combobox',
+        'status':   'incinerator_status_label',
+        'removed_msg': 'Incinerator mod removed',
+    },
+]
+
 
 class PortalManager:
     def __init__(self, root):
@@ -26,18 +95,75 @@ class PortalManager:
             self.start_game,
             self.add_skin_mod
         )
-        self.gun_model_combobox, self.portal_combobox, self.cube_combobox, self.turret_combobox, self.chell_combobox, self.glados_combobox, self.gun_status_label, self.portal_status_label, self.cube_status_label, self.turret_status_label, self.chell_status_label, self.glados_status_label = self.ui.setup_portal_gun_tab(
-            self.change_gun_model,
-            self.change_portal,
-            self.change_companion_cube,
-            self.change_turret,
-            self.change_chell,
-            self.change_glados
-        )
-        
-        self.maps_listbox = self.ui.setup_maps_tab(Maps.CUSTOM_MAPS, self.delete_map, self.add_custom_map)
+
+        skin_callbacks = [lambda s=slot: self.change_skin(s) for slot in SKIN_SLOTS]
+        widgets = self.ui.setup_portal_gun_tab(*skin_callbacks)
+
+        comboboxes = widgets[:8]
+        status_labels = widgets[8:]
+        for slot, combobox, status in zip(SKIN_SLOTS, comboboxes, status_labels):
+            setattr(self, slot['combobox'], combobox)
+            setattr(self, slot['status'], status)
+
+        self.maps_listbox = self.ui.setup_maps_tab(Maps.CUSTOM_MAPS, self.delete_map, self.add_custom_map, self.open_maps_folder)
+        self.sourcemods_listbox = self.ui.setup_sourcemods_tab(self.delete_sourcemod, self.open_sourcemods_folder, self.add_sourcemod, self.toggle_portal1_filter)
         self.load_portal_path()
-    
+
+    def change_skin(self, slot):
+        combobox = getattr(self, slot['combobox'])
+        status_label = getattr(self, slot['status'])
+        selected_mod = combobox.get()
+        if not selected_mod:
+            return
+
+        active_mod = CustomFiles.get_active_mod(self.custom_folder_path, slot['mod_type'])
+
+        if selected_mod == 'NONE':
+            if active_mod:
+                CustomFiles.move_folder(
+                    os.path.join(self.custom_folder_path, active_mod),
+                    os.path.join(self.portal_manager_path, slot['subfolder'], active_mod)
+                )
+                status_label.config(text=slot['removed_msg'])
+            self.update_skin_dropdown(slot)
+            return
+
+        if active_mod:
+            CustomFiles.move_folder(
+                os.path.join(self.custom_folder_path, active_mod),
+                os.path.join(self.portal_manager_path, slot['subfolder'], active_mod)
+            )
+
+        dest_path = os.path.join(self.custom_folder_path, selected_mod)
+        if CustomFiles.move_folder(os.path.join(self.portal_manager_path, slot['subfolder'], selected_mod), dest_path):
+            CustomFiles.create_pm_info_file(dest_path, slot['mod_type'])
+            status_label.config(text=f"{selected_mod} has been set as active")
+
+        self.update_skin_dropdown(slot)
+
+    def update_skin_dropdown(self, slot):
+        combobox = getattr(self, slot['combobox'], None)
+        if not combobox:
+            return
+        folders = CustomFiles.get_mod_folders(self.portal_manager_path, slot['subfolder'])
+        active_mod = CustomFiles.get_active_mod(self.custom_folder_path, slot['mod_type'])
+        if active_mod and active_mod not in folders:
+            folders.append(active_mod)
+        combobox['values'] = ['NONE'] + folders
+        combobox.set(active_mod if active_mod else 'NONE')
+
+    def update_all_skin_dropdowns(self):
+        for slot in SKIN_SLOTS:
+            self.update_skin_dropdown(slot)
+
+    def open_maps_folder(self):
+        if not self.portal_path_entry.get():
+            tk.messagebox.showwarning("No Path Set", "Please set your Portal 1 path first.")
+            return
+        path = os.path.join(self.portal_path_entry.get(), 'portal', 'maps')
+        os.makedirs(path, exist_ok=True)
+        subprocess.Popen(['xdg-open', path])
+
     def add_custom_map(self):
         if not self.portal_path_entry.get():
             tk.messagebox.showwarning("No Path Set", "Please set your Portal 1 path first.")
@@ -83,8 +209,7 @@ class PortalManager:
     def _install_map_bsp(self, bsp_file, maps_dest, portal_dir_path):
         try:
             os.makedirs(maps_dest, exist_ok=True)
-            dest = os.path.join(maps_dest, os.path.basename(bsp_file))
-            shutil.move(bsp_file, dest)
+            shutil.move(bsp_file, os.path.join(maps_dest, os.path.basename(bsp_file)))
             Maps.scan_custom_maps(portal_dir_path)
             self.ui.refresh_maps_list(Maps.CUSTOM_MAPS)
         except Exception as e:
@@ -93,7 +218,6 @@ class PortalManager:
     def _install_map_folder(self, folder, maps_dest, materials_dest, portal_dir_path):
         try:
             os.makedirs(maps_dest, exist_ok=True)
-
             bsp_found = False
             for root, dirs, files in os.walk(folder):
                 for filename in files:
@@ -121,6 +245,36 @@ class PortalManager:
         except Exception as e:
             tk.messagebox.showerror("Error", f"Failed to install map: {e}")
 
+    def toggle_portal1_filter(self):
+        if self.ui.portal1_filter_var.get():
+            self.ui.refresh_sourcemods_list(SourceMods.get_portal1_mods(self.portal_path_entry.get()))
+        else:
+            self.ui.refresh_sourcemods_list(SourceMods.SOURCEMODS)
+
+    def add_sourcemod(self):
+        if not self.portal_path_entry.get():
+            tk.messagebox.showwarning("No Path Set", "Please set your Portal 1 path first.")
+            return
+        folder = filedialog.askdirectory(title="Select SourceMod folder")
+        if not folder:
+            return
+        if SourceMods.add_sourcemod(self.portal_path_entry.get(), folder):
+            self.ui.refresh_sourcemods_list(SourceMods.SOURCEMODS)
+        else:
+            tk.messagebox.showerror("Error", "Failed to add SourceMod.")
+
+    def open_sourcemods_folder(self):
+        if not self.portal_path_entry.get():
+            tk.messagebox.showwarning("No Path Set", "Please set your Portal 1 path first.")
+            return
+        subprocess.Popen(['xdg-open', Setup.get_sourcemods_path(self.portal_path_entry.get())])
+
+    def delete_sourcemod(self, mod_name):
+        if not self.portal_path_entry.get():
+            return
+        SourceMods.delete_sourcemod(self.portal_path_entry.get(), mod_name)
+        self.ui.refresh_sourcemods_list(SourceMods.SOURCEMODS)
+
     def delete_map(self, map_name):
         if not self.portal_path_entry.get():
             return
@@ -139,14 +293,7 @@ class PortalManager:
             tk.messagebox.showwarning("No Path Set", "Please set your Portal 1 path first.")
             return
 
-        skin_types = {
-            'Portal Gun Model/Texture': 'PortalGuns',
-            'Custom Portal': 'Portals',
-            'Companion Cube': 'CompanionCubes',
-            'Turret': 'Turrets',
-            'Chell': 'Chell',
-            'Glados': 'Glados',
-        }
+        skin_types = {slot['label']: slot['subfolder'] for slot in SKIN_SLOTS}
 
         popup = tk.Toplevel(self.root)
         popup.title("Select Skin Type")
@@ -170,18 +317,11 @@ class PortalManager:
             mod_folder = filedialog.askdirectory(title=f"Select your {skin_type} mod folder")
             if not mod_folder:
                 return
-
             mod_name = os.path.basename(mod_folder)
             dest = os.path.join(self.portal_manager_path, skin_types[skin_type], mod_name)
-
             if CustomFiles.move_folder(mod_folder, dest):
                 tk.messagebox.showinfo("Success", f'"{mod_name}" added to {skin_types[skin_type]}.')
-                self.update_portal_gun_dropdown()
-                self.update_portal_dropdown()
-                self.update_companion_cube_dropdown()
-                self.update_turret_dropdown()
-                self.update_chell_dropdown()
-                self.update_glados_dropdown()
+                self.update_all_skin_dropdowns()
             else:
                 tk.messagebox.showerror("Error", f'Failed to add "{mod_name}". Make sure the folder exists.')
 
@@ -189,292 +329,33 @@ class PortalManager:
         btn_frame.pack(pady=10)
         ttk.Button(btn_frame, text="Confirm", command=on_confirm).pack(side='left', padx=5)
         ttk.Button(btn_frame, text="Cancel", command=popup.destroy).pack(side='left', padx=5)
-    
-    def change_gun_model(self):
-        selected_mod = self.gun_model_combobox.get()
-        if not selected_mod:
-            return
 
-        active_mod = CustomFiles.get_active_portal_gun_mod(self.custom_folder_path)
-        if selected_mod == 'NONE':
-            if active_mod:
-                source_path = os.path.join(self.custom_folder_path, active_mod)
-                dest_path = os.path.join(self.portal_manager_path, 'PortalGuns', active_mod)
-                CustomFiles.move_folder(source_path, dest_path)
-                self.gun_status_label.config(text="Portal Gun mod removed")
-            self.update_portal_gun_dropdown()
-            return
-
-        if active_mod:
-            source_path = os.path.join(self.custom_folder_path, active_mod)
-            dest_path = os.path.join(self.portal_manager_path, 'PortalGuns', active_mod)
-            CustomFiles.move_folder(source_path, dest_path)
-        
-        source_path = os.path.join(self.portal_manager_path, 'PortalGuns', selected_mod)
-        dest_path = os.path.join(self.custom_folder_path, selected_mod)
-        if CustomFiles.move_folder(source_path, dest_path):
-            CustomFiles.create_pm_info_file(dest_path)
-            self.gun_status_label.config(text=f"{selected_mod} has been set as active")
-        
-        self.update_portal_gun_dropdown()
-    
-    def change_portal(self):
-        selected_mod = self.portal_combobox.get()
-        if not selected_mod:
-            return
-
-        active_mod = CustomFiles.get_active_portal_mod(self.custom_folder_path)
-        if selected_mod == 'NONE':
-            if active_mod:
-                source_path = os.path.join(self.custom_folder_path, active_mod)
-                dest_path = os.path.join(self.portal_manager_path, 'Portals', active_mod)
-                CustomFiles.move_folder(source_path, dest_path)
-                self.portal_status_label.config(text="Portal mod removed")
-            self.update_portal_dropdown()
-            return
-
-        if active_mod:
-            source_path = os.path.join(self.custom_folder_path, active_mod)
-            dest_path = os.path.join(self.portal_manager_path, 'Portals', active_mod)
-            CustomFiles.move_folder(source_path, dest_path)
-        
-        source_path = os.path.join(self.portal_manager_path, 'Portals', selected_mod)
-        dest_path = os.path.join(self.custom_folder_path, selected_mod)
-        if CustomFiles.move_folder(source_path, dest_path):
-            CustomFiles.create_pm_info_file(dest_path, "Portal")
-            self.portal_status_label.config(text=f"{selected_mod} has been set as active")
-        
-        self.update_portal_dropdown()
-    
-    def change_companion_cube(self):
-        selected_mod = self.cube_combobox.get()
-        if not selected_mod:
-            return
-
-        active_mod = CustomFiles.get_active_companion_cube_mod(self.custom_folder_path)
-        if selected_mod == 'NONE':
-            if active_mod:
-                source_path = os.path.join(self.custom_folder_path, active_mod)
-                dest_path = os.path.join(self.portal_manager_path, 'CompanionCubes', active_mod)
-                CustomFiles.move_folder(source_path, dest_path)
-                self.cube_status_label.config(text="Companion Cube mod removed")
-            self.update_companion_cube_dropdown()
-            return
-
-        if active_mod:
-            source_path = os.path.join(self.custom_folder_path, active_mod)
-            dest_path = os.path.join(self.portal_manager_path, 'CompanionCubes', active_mod)
-            CustomFiles.move_folder(source_path, dest_path)
-
-        source_path = os.path.join(self.portal_manager_path, 'CompanionCubes', selected_mod)
-        dest_path = os.path.join(self.custom_folder_path, selected_mod)
-        if CustomFiles.move_folder(source_path, dest_path):
-            CustomFiles.create_pm_info_file(dest_path, "CompanionCube")
-            self.cube_status_label.config(text=f"{selected_mod} has been set as active")
-
-        self.update_companion_cube_dropdown()
-
-    def update_companion_cube_dropdown(self):
-        if not hasattr(self, 'cube_combobox'):
-            return
-
-        folders = CustomFiles.get_companion_cube_folders(self.portal_manager_path)
-        active_mod = CustomFiles.get_active_companion_cube_mod(self.custom_folder_path)
-
-        if active_mod and active_mod not in folders:
-            folders.append(active_mod)
-
-        self.cube_combobox['values'] = ['NONE'] + folders
-
-        if active_mod:
-            self.cube_combobox.set(active_mod)
-        else:
-            self.cube_combobox.set('NONE')
-
-    def change_turret(self):
-        selected_mod = self.turret_combobox.get()
-        if not selected_mod:
-            return
-
-        active_mod = CustomFiles.get_active_turret_mod(self.custom_folder_path)
-        if selected_mod == 'NONE':
-            if active_mod:
-                source_path = os.path.join(self.custom_folder_path, active_mod)
-                dest_path = os.path.join(self.portal_manager_path, 'Turrets', active_mod)
-                CustomFiles.move_folder(source_path, dest_path)
-                self.turret_status_label.config(text="Turret mod removed")
-            self.update_turret_dropdown()
-            return
-
-        if active_mod:
-            source_path = os.path.join(self.custom_folder_path, active_mod)
-            dest_path = os.path.join(self.portal_manager_path, 'Turrets', active_mod)
-            CustomFiles.move_folder(source_path, dest_path)
-
-        source_path = os.path.join(self.portal_manager_path, 'Turrets', selected_mod)
-        dest_path = os.path.join(self.custom_folder_path, selected_mod)
-        if CustomFiles.move_folder(source_path, dest_path):
-            CustomFiles.create_pm_info_file(dest_path, "Turret")
-            self.turret_status_label.config(text=f"{selected_mod} has been set as active")
-
-        self.update_turret_dropdown()
-
-    def update_turret_dropdown(self):
-        if not hasattr(self, 'turret_combobox'):
-            return
-
-        folders = CustomFiles.get_turret_folders(self.portal_manager_path)
-        active_mod = CustomFiles.get_active_turret_mod(self.custom_folder_path)
-
-        if active_mod and active_mod not in folders:
-            folders.append(active_mod)
-
-        self.turret_combobox['values'] = ['NONE'] + folders
-
-        if active_mod:
-            self.turret_combobox.set(active_mod)
-        else:
-            self.turret_combobox.set('NONE')
-
-    def change_chell(self):
-        selected_mod = self.chell_combobox.get()
-        if not selected_mod:
-            return
-
-        active_mod = CustomFiles.get_active_chell_mod(self.custom_folder_path)
-        if selected_mod == 'NONE':
-            if active_mod:
-                CustomFiles.move_folder(
-                    os.path.join(self.custom_folder_path, active_mod),
-                    os.path.join(self.portal_manager_path, 'Chell', active_mod)
-                )
-                self.chell_status_label.config(text="Chell mod removed")
-            self.update_chell_dropdown()
-            return
-
-        if active_mod:
-            CustomFiles.move_folder(
-                os.path.join(self.custom_folder_path, active_mod),
-                os.path.join(self.portal_manager_path, 'Chell', active_mod)
-            )
-
-        dest_path = os.path.join(self.custom_folder_path, selected_mod)
-        if CustomFiles.move_folder(os.path.join(self.portal_manager_path, 'Chell', selected_mod), dest_path):
-            CustomFiles.create_pm_info_file(dest_path, "Chell")
-            self.chell_status_label.config(text=f"{selected_mod} has been set as active")
-
-        self.update_chell_dropdown()
-
-    def update_chell_dropdown(self):
-        if not hasattr(self, 'chell_combobox'):
-            return
-
-        folders = CustomFiles.get_chell_folders(self.portal_manager_path)
-        active_mod = CustomFiles.get_active_chell_mod(self.custom_folder_path)
-
-        if active_mod and active_mod not in folders:
-            folders.append(active_mod)
-
-        self.chell_combobox['values'] = ['NONE'] + folders
-        self.chell_combobox.set(active_mod if active_mod else 'NONE')
-
-    def change_glados(self):
-        selected_mod = self.glados_combobox.get()
-        if not selected_mod:
-            return
-
-        active_mod = CustomFiles.get_active_glados_mod(self.custom_folder_path)
-        if selected_mod == 'NONE':
-            if active_mod:
-                CustomFiles.move_folder(
-                    os.path.join(self.custom_folder_path, active_mod),
-                    os.path.join(self.portal_manager_path, 'Glados', active_mod)
-                )
-                self.glados_status_label.config(text="Glados mod removed")
-            self.update_glados_dropdown()
-            return
-
-        if active_mod:
-            CustomFiles.move_folder(
-                os.path.join(self.custom_folder_path, active_mod),
-                os.path.join(self.portal_manager_path, 'Glados', active_mod)
-            )
-
-        dest_path = os.path.join(self.custom_folder_path, selected_mod)
-        if CustomFiles.move_folder(os.path.join(self.portal_manager_path, 'Glados', selected_mod), dest_path):
-            CustomFiles.create_pm_info_file(dest_path, "Glados")
-            self.glados_status_label.config(text=f"{selected_mod} has been set as active")
-
-        self.update_glados_dropdown()
-
-    def update_glados_dropdown(self):
-        if not hasattr(self, 'glados_combobox'):
-            return
-
-        folders = CustomFiles.get_glados_folders(self.portal_manager_path)
-        active_mod = CustomFiles.get_active_glados_mod(self.custom_folder_path)
-
-        if active_mod and active_mod not in folders:
-            folders.append(active_mod)
-
-        self.glados_combobox['values'] = ['NONE'] + folders
-        self.glados_combobox.set(active_mod if active_mod else 'NONE')
-
-    def update_portal_gun_dropdown(self):
-        if not hasattr(self, 'gun_model_combobox'):
-            return
-        folders = CustomFiles.get_portal_gun_folders(self.portal_manager_path)
-        active_mod = CustomFiles.get_active_portal_gun_mod(self.custom_folder_path)
-        if active_mod and active_mod not in folders:
-            folders.append(active_mod)
-        self.gun_model_combobox['values'] = ['NONE'] + folders
-        if active_mod:
-            self.gun_model_combobox.set(active_mod)
-        else:
-            self.gun_model_combobox.set('NONE')
-    
-    def update_portal_dropdown(self):
-        if not hasattr(self, 'portal_combobox'):
-            return
-        folders = CustomFiles.get_portal_folders(self.portal_manager_path)
-        active_mod = CustomFiles.get_active_portal_mod(self.custom_folder_path)
-        if active_mod and active_mod not in folders:
-            folders.append(active_mod)
-        self.portal_combobox['values'] = ['NONE'] + folders
-        if active_mod:
-            self.portal_combobox.set(active_mod)
-        else:
-            self.portal_combobox.set('NONE')
-    
     def browse_portal_path(self):
         dir_path = filedialog.askdirectory(title="Select Portal 1 Game Directory")
         if dir_path:
             self.portal_path_entry.delete(0, tk.END)
             self.portal_path_entry.insert(0, dir_path)
             self.update_portal_manager_path(dir_path)
-    
+
     def save_current_path(self):
         path = self.portal_path_entry.get()
         if path:
             self.save_portal_path(path)
-    
+
     def save_portal_path(self, path):
         with open(self.config_file, 'w') as f:
             f.write(f"portal1_path={path}\n")
-    
+
     def update_portal_manager_path(self, portal_dir_path):
         Setup.run_setup(portal_dir_path)
         Maps.scan_custom_maps(portal_dir_path)
         self.ui.refresh_maps_list(Maps.CUSTOM_MAPS)
+        SourceMods.scan_sourcemods(portal_dir_path)
+        self.ui.refresh_sourcemods_list(SourceMods.SOURCEMODS)
         self.portal_manager_path = CustomFiles.get_portal_manager_path(portal_dir_path)
         self.custom_folder_path = CustomFiles.get_custom_folder_path(portal_dir_path)
-        self.update_portal_gun_dropdown()
-        self.update_portal_dropdown()
-        self.update_companion_cube_dropdown()
-        self.update_turret_dropdown()
-        self.update_chell_dropdown()
-        self.update_glados_dropdown()
-    
+        self.update_all_skin_dropdowns()
+
     def load_portal_path(self):
         if os.path.exists(self.config_file):
             with open(self.config_file, 'r') as f:
