@@ -36,6 +36,7 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
   - Custom Texture Support
   - Custom GUI Support
   - Custom Effects Support
+  - Custom Map's extra files tracking for easily removing them in the future
   - Godot Based Version (better GUI, while still working on linux/windows with almost no code changes)
 </details>
 
