@@ -9,7 +9,9 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
 
 - **Custom Models/Skins:** Portal Manager supports custom portal guns, portals, chell models, glados models, turret models, bean cans, incinerators, and cube models.
 
-- **Custom Maps:** Portal Manager allows you to easily install and delete custom maps, while also giving you an easy way to keep up with what custom maps you currently have installed. 
+- **Custom Maps:** Portal Manager allows you to easily install and delete custom maps, while also giving you an easy way to keep up with what custom maps you currently have installed.
+
+- **Mods / SourceMods:** Portal Manager allows you to easily install and delete mods that are meant to go into your sourcemods folder, with an option to filter to just Portal 1 mods
 
 - **Auto Creates All Folders:** Portal Manager will auto the custom, sourcemods, and PortalManager folders for you. 
 
@@ -34,7 +36,6 @@ I got tired of constantly having to manually swap out mods in Portal 1, so I wen
   - Custom Texture Support
   - Custom GUI Support
   - Custom Effects Support
-  - Content/sourcemod Mods
   - Godot Based Version (better GUI, while still working on linux/windows with almost no code changes)
 </details>
 
